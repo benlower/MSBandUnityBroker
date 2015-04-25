@@ -23,6 +23,17 @@ namespace MSBandHeartRateBroker
             this.InitializeComponent();
 
             this.NavigationCacheMode = NavigationCacheMode.Required;
+
+            Loaded += MainPage_Loaded;
+        }
+
+        Microsoft.AspNet.SignalR.Client.HubConnection connection;
+        Microsoft.AspNet.SignalR.Client.IHubProxy proxy;
+        void MainPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            var url = new Uri(this.textBox.Text);
+             connection = new Microsoft.AspNet.SignalR.Client.HubConnection(url.ToString());
+            proxy = connection.CreateHubProxy("HeartRateHub");
         }
 
         /// <summary>
@@ -46,6 +57,7 @@ namespace MSBandHeartRateBroker
                     (sender as Button).IsEnabled = false;
 
                     // hook up to the HeartRate sensor ReadingChanged event
+                    bandClient.SensorManager.HeartRate.ReportingInterval = TimeSpan.FromMilliseconds(1);
                     bandClient.SensorManager.HeartRate.ReadingChanged += HeartRate_ReadingChanged;
                     await bandClient.SensorManager.HeartRate.StartReadingsAsync();
 
@@ -56,6 +68,7 @@ namespace MSBandHeartRateBroker
                     // Get data for a minute
                     await Task.Delay(TimeSpan.FromMinutes(1));
                     await bandClient.SensorManager.HeartRate.StopReadingsAsync();
+                    (sender as Button).IsEnabled = true;
                 }
             }
             catch (Exception ex)
@@ -88,11 +101,10 @@ namespace MSBandHeartRateBroker
                 this.textBlockNumber.Text = value;
                 this.textBlock.Text = string.Format("Sending {0}...", value);
 
-                var url = new Uri(this.textBox.Text);
-                var connection = new Microsoft.AspNet.SignalR.Client.HubConnection(url.ToString());
-
-                var proxy = connection.CreateHubProxy("HeartRateHub");
-                await connection.Start();
+                if (connection.State != Microsoft.AspNet.SignalR.Client.ConnectionState.Connected)
+                {
+                    await connection.Start();
+                }
 
                 await proxy.Invoke("SendHeartRate", value);
                 this.textBlock.Text = "Sent.";
