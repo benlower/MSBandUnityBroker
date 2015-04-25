@@ -57,7 +57,6 @@ namespace MSBandHeartRateBroker
                     (sender as Button).IsEnabled = false;
 
                     // hook up to the HeartRate sensor ReadingChanged event
-                    bandClient.SensorManager.HeartRate.ReportingInterval = TimeSpan.FromMilliseconds(1);
                     bandClient.SensorManager.HeartRate.ReadingChanged += HeartRate_ReadingChanged;
                     await bandClient.SensorManager.HeartRate.StartReadingsAsync();
 
