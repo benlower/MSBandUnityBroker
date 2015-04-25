@@ -4,9 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 namespace MSBandHeartRateBroker
@@ -41,9 +43,15 @@ namespace MSBandHeartRateBroker
                 // Connect to Microsoft Band.
                 using (IBandClient bandClient = await BandClientManager.Instance.ConnectAsync(pairedBands[0]))
                 {
+                    (sender as Button).IsEnabled = false;
+
                     // hook up to the HeartRate sensor ReadingChanged event
                     bandClient.SensorManager.HeartRate.ReadingChanged += HeartRate_ReadingChanged;
                     await bandClient.SensorManager.HeartRate.StartReadingsAsync();
+
+                    this.Storyboard1.Begin();
+                    this.textBlockHeart.Foreground = new SolidColorBrush(Colors.Red);
+                    this.textBlockNumber.Foreground = new SolidColorBrush(Colors.White);
 
                     // Get data for a minute
                     await Task.Delay(TimeSpan.FromMinutes(1));
@@ -75,15 +83,19 @@ namespace MSBandHeartRateBroker
             try
             {
                 this.progressBar.Visibility = Visibility.Visible;
+
+                this.textBlockError.Text = string.Empty;
+                this.textBlockNumber.Text = value;
                 this.textBlock.Text = string.Format("Sending {0}...", value);
 
                 var url = new Uri(this.textBox.Text);
                 var connection = new Microsoft.AspNet.SignalR.Client.HubConnection(url.ToString());
-                await connection.Start();
-                
+
                 var proxy = connection.CreateHubProxy("HeartRateHub");
-                this.textBlock.Text = value;
+                await connection.Start();
+
                 await proxy.Invoke("SendHeartRate", value);
+                this.textBlock.Text = "Sent.";
             }
             catch (Exception ex)
             {
@@ -91,7 +103,6 @@ namespace MSBandHeartRateBroker
             }
             finally
             {
-                this.textBlock.Text = string.Empty;
                 this.progressBar.Visibility = Visibility.Collapsed;
             }
         }
