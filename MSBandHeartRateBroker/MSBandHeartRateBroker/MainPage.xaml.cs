@@ -59,7 +59,41 @@ namespace MSBandHeartRateBroker
         private async void HeartRate_ReadingChanged(object sender, BandSensorReadingEventArgs<IBandHeartRateReading> e)
         {
             IBandHeartRateReading hr = e.SensorReading;
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { this.textBlock.Text = hr.HeartRate.ToString(); }).AsTask();
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                Send(hr.HeartRate.ToString());
+            }).AsTask();
+        }
+
+        private void SampleButton_Click(object sender, RoutedEventArgs e)
+        {
+            Send(new Random((int)DateTime.Now.Ticks).Next(30, 145).ToString());
+        }
+
+        async void Send(string value)
+        {
+            try
+            {
+                this.progressBar.Visibility = Visibility.Visible;
+                this.textBlock.Text = string.Format("Sending {0}...", value);
+
+                var url = new Uri(this.textBox.Text);
+                var connection = new Microsoft.AspNet.SignalR.Client.HubConnection(url.ToString());
+                await connection.Start();
+                
+                var proxy = connection.CreateHubProxy("HeartRateHub");
+                this.textBlock.Text = value;
+                await proxy.Invoke("SendHeartRate", value);
+            }
+            catch (Exception ex)
+            {
+                this.textBlockError.Text = ex.Message.ToString();
+            }
+            finally
+            {
+                this.textBlock.Text = string.Empty;
+                this.progressBar.Visibility = Visibility.Collapsed;
+            }
         }
     }
 }

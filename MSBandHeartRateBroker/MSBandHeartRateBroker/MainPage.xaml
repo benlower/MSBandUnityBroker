@@ -8,10 +8,15 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Grid>
-        <Button Content="Run" HorizontalAlignment="Left" Margin="10,28,0,0" VerticalAlignment="Top" Width="215" Click="Button_Click" FontFamily="Global User Interface"/>
-        <TextBlock x:Name="textBlock" HorizontalAlignment="Left" Margin="10,81,0,0" TextWrapping="Wrap" Text="Pair a Microsoft Band with the phone and click &quot;Run&quot;." VerticalAlignment="Top" Height="549" Width="380" FontSize="22"/>
+    <StackPanel Margin="8,0">
         <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="MS BAND HEARTRATE BROKER" VerticalAlignment="Top" Height="23" Width="380" FontSize="16"/>
-
-    </Grid>
+        <StackPanel Orientation="Horizontal">
+            <Button Content="Run" Click="Button_Click" FontFamily="Global User Interface"/>
+            <Button Content="Send Sample" Click="SampleButton_Click" FontFamily="Global User Interface" Margin="10,0,0,0"/>
+        </StackPanel>
+        <TextBox PlaceholderText="IP Address" Text="http://10.69.224.198:8089" x:Name="textBox" TextWrapping="Wrap" FontSize="22"/>
+        <ProgressBar IsIndeterminate="True" x:Name="progressBar" Visibility="Collapsed" HorizontalAlignment="Stretch" />
+        <TextBlock x:Name="textBlock" TextWrapping="Wrap" Text="Pair a Microsoft Band with the phone and click &quot;Run&quot;." FontSize="22"/>
+        <TextBlock x:Name="textBlockError" TextWrapping="Wrap" Text="" Foreground="Pink" FontSize="22"/>
+    </StackPanel>
 </Page>
